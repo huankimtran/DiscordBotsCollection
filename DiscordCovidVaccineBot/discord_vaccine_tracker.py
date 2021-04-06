@@ -55,23 +55,23 @@ class DiscordVaccineTrackerBot:
         self.BOT_API = self.ENV['DISCORD_VACCINE_TRACKER_BOT_API']
         # bot subscribe command prompt
         self.SUBSCRIBE_CMD_PROMPT = """ The command syntax is
-                #subscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
+                /subscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
                 For example:
 
-                #subscribe_zip 55737, 77433
+                /subscribe_zip 55737, 77433
 
                 Or using range, from 75513 to 75515
 
-                #subscribe_zip 75513-75515"""
+                /subscribe_zip 75513-75515"""
         self.UNSUBSCRIBE_CMD_PROMPT = """ The command syntax is
-                #unsubscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
+                /unsubscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
                 For example:
 
-                #unsubscribe_zip 55737, 77433
+                /unsubscribe_zip 55737, 77433
 
                 Or using range, from 75513 to 75515
 
-                #unsubscribe_zip 75513-75515"""
+                /unsubscribe_zip 75513-75515"""
         # Generate the discord bot
         self.bot = client = discord.Client()
         # =========================================DiscordBotDefinition=============================================
@@ -82,7 +82,7 @@ class DiscordVaccineTrackerBot:
             await self.channel.send('Bot ready!')
             # Initialize the checker bot map
             self.checker_bot_map = {
-                'walgreen' : WallGreenBot(self.channel)
+                'walgreen' : WallGreenBot(self)
             }
 
             print(f'{client.user.name} has connected to Discord!')
@@ -108,6 +108,9 @@ class DiscordVaccineTrackerBot:
         # Create thread to run availability checker bots
         threading.Thread(target=run_availability_checker_bot, args=(self, )).start()
 
+    def send_msg_to_channel(self, msg):
+        self.bot.loop.create_task(self.channel.send(msg))
+
     def run(self):
         self.bot.run(self.BOT_API)
 
@@ -115,14 +118,14 @@ class DiscordVaccineTrackerBot:
         """
             Track the command to add a user to a list of zipcode
             The command syntax is
-            #subscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
+            /subscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
             For example:
 
-            #subscribe_zip 55737, 77433
+            /subscribe_zip 55737, 77433
 
             Or using range, from 75513 to 75515
 
-            #subscribe_zip 75513-75515
+            /subscribe_zip 75513-75515
             Return False if cannot find the command or command does not follow
             the correct syntax
         """
@@ -131,11 +134,11 @@ class DiscordVaccineTrackerBot:
         full_msg = ' '.join(full_msg.split())
 
         # Check if message contains this command
-        if full_msg.find('#subscribe_zip') == -1:
+        if full_msg.find('/subscribe_zip') == -1:
             return False
        
         # Extract arguments
-        arg_raw = full_msg[len('#subscribe_zip '):]
+        arg_raw = full_msg[len('/subscribe_zip '):]
 
         # range or list ?
         if '-' in arg_raw:
@@ -171,14 +174,14 @@ class DiscordVaccineTrackerBot:
         """
             Track the command to add a user to a list of zipcode
             The command syntax is
-            #unsubscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
+            /unsubscribe_zip [list of zip seperated by , or zipcode range seperated by a hyphen]
             For example:
 
-            #unsubscribe_zip 55737, 77433
+            /unsubscribe_zip 55737, 77433
 
             Or using range, from 75513 to 75515
 
-            #unsubscribe_zip 75513-75515
+            /unsubscribe_zip 75513-75515
             Return False if cannot find the command or command does not follow
             the correct syntax
         """
@@ -187,12 +190,12 @@ class DiscordVaccineTrackerBot:
         full_msg = ' '.join(full_msg.split())
 
         # Check if message contains this command
-        if full_msg.find('#unsubscribe_zip') == -1:
+        if full_msg.find('/unsubscribe_zip') == -1:
             return False
 
        
         # Extract arguments
-        arg_raw = full_msg[len('#unsubscribe_zip '):]
+        arg_raw = full_msg[len('/unsubscribe_zip '):]
 
         # range or list ?
         if '-' in arg_raw:

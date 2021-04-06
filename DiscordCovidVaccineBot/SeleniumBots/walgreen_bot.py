@@ -12,8 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class WallGreenBot:
-    def __init__(self, discord_channel) -> None:
-        self.channel = discord_channel
+    def __init__(self, discord_client) -> None:
+        self.discord_client = discord_client
         self.page_url = f'https://www.walgreens.com/findcare/vaccination/covid-19?ban={random.randint(10000, 99999)}'
         self.user_zipcode_map = dict()
         self.zipcode_status_map = dict()
@@ -122,14 +122,14 @@ class WallGreenBot:
                 # Check result
                 if 'not available' in result:
                     self.zipcode_status_map[z_code] = False
-                    print(f'Not available {z_code}')
+                    # print(f'Not available {z_code}')
                 else:
-                    if self.zipcode_status_map[z_code]:
+                    if not self.zipcode_status_map[z_code]:
                         # Status of this zipcode has been flipped, announce
                         self.announce(z_code)
                     # Record the change
                     self.zipcode_status_map[z_code] = True
-                    print(f'Available {z_code}')
+                    # print(f'Available {z_code}')
                 break
             # Clear result box
             zip_search_box.clear()
@@ -138,9 +138,10 @@ class WallGreenBot:
     
     def announce(self, z_code):
         # Build message
-        msg = f'{z_code} is available\n'
+        msg = f'{z_code} Wallgreen\'s vaccine is available, go to https://www.walgreens.com/findcare/vaccination/covid-19/ to get your shot\n'
         for user in self.user_zipcode_map[z_code]:
-            msg += f'<{user}> '
+            msg += f'{user} '
         # Announce
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.channel.send(msg))
+        self.discord_client.send_msg_to_channel(msg)
+        # Yield for the main thread to post msg
+        time.sleep(0)
