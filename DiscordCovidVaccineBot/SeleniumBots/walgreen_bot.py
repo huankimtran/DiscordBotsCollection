@@ -21,8 +21,11 @@ class WallGreenBot:
         self.driver = self.get_to_search_page()
 
     def get_to_search_page(self):
+        # Run headless
+        fireFoxOptions = webdriver.FirefoxOptions()
+        fireFoxOptions.set_headless()
         # Spawn the browser
-        driver = webdriver.Firefox()
+        driver = webdriver.Firefox(firefox_options=fireFoxOptions)
         # Connect to landing page
         driver.get(self.page_url)
         # get button to start schedule
@@ -138,7 +141,7 @@ class WallGreenBot:
     
     def announce(self, z_code):
         # Build message
-        msg = f'{z_code} Wallgreen\'s vaccine is available, go to https://www.walgreens.com/findcare/vaccination/covid-19/ to get your shot\n'
+        msg = f'Wallgreen\'s vaccine at Zipcode {z_code} is available, go to https://www.walgreens.com/findcare/vaccination/covid-19/ to get your shot\n'
         for user in self.user_zipcode_map[z_code]:
             msg += f'{user} '
         # Announce
