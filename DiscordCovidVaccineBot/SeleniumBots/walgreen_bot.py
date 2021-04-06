@@ -82,6 +82,7 @@ class WallGreenBot:
                         self.user_zipcode_map[zipcode].remove(user_name)
                         if len(self.user_zipcode_map[zipcode]) == 0:
                             del self.user_zipcode_map[zipcode]
+                            del self.zipcode_status_map[zipcode]
                     except Exception as e:
                         continue
 
