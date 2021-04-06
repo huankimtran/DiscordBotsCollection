@@ -1,0 +1,108 @@
+import time
+import threading
+import random
+
+# import webdriver
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+class WallGreenBot:
+    def __init__(self) -> None:
+        self.page_url = f'https://www.walgreens.com/findcare/vaccination/covid-19?ban={random.randint(10000, 99999)}'
+        self.user_zipcode_map = dict()
+        self.lock = threading.Lock()
+        
+
+    def subscribe_user_to_zipcode(self, user_name, zipcode_list):
+        """
+            Subscribing a user whose name is user_name to
+            zipcodes listed in the list 
+        """
+        with self.lock:
+            for zipcode in zipcode_list:
+                if zipcode not in self.user_zipcode_map:
+                    self.user_zipcode_map[zipcode] = set()
+                # Add user to the subscriber set of this zipcode
+                self.user_zipcode_map[zipcode].add(user_name)
+    
+    def unsubscribe_user_from_zipcode(self, user_name, zipcode_list):
+        """
+            Unsubscribing a user whose name is user_name from
+            zipcodes listed in the list 
+        """
+        with self.lock:
+            for zipcode in zipcode_list:
+                if zipcode in self.user_zipcode_map:
+                    try:
+                        self.user_zipcode_map[zipcode].remove(user_name)
+                    except Exception as e:
+                        continue
+
+    def run(self):
+        # create webdriver object
+        driver = webdriver.Firefox()
+        # driver = webdriver.Chrome(options=options)
+        # driver = webdriver.Chrome()
+        # get to landig page
+        driver.get(self.page_url)
+        # get button to start schedule
+        element = driver.find_element_by_xpath(
+            "//a[@href='/findcare/vaccination/covid-19/location-screening']")
+        # Bypass bot detector
+        time.sleep(7)
+        element.click()
+        # Wait until the transition finishes
+        WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element(
+            (By.XPATH, "//a[@title='state eligibility guidelines']"), 'state eligibility guidelines'))
+        # Now you got to the search page, find the zipcode search input
+        zip_search_box = driver.find_element_by_id('inputLocation')
+        # Find the search button
+        search_btn = zip_search_box.find_element_by_xpath('../button')
+        # Find the result field
+        result_container = zip_search_box.find_element_by_xpath(
+            '../../../../section[@class="mt25"]')
+        # Now input the zipcode and search
+        list_zip = list(self.user_zipcode_map.keys())
+        # Wait until the auto fill zipcode appears, clear then start checking
+        while len(zip_search_box.get_attribute('value')) == 0:
+            time.sleep(0.1)
+        zip_search_box.clear()
+        #  Start checking
+        for z_code in list_zip:
+            # Send in the zipcode
+            zip_search_box.send_keys(str(z_code))
+            # Make sure no result available
+            while True:
+                try:
+                    p = result_container.find_element_by_xpath('./p')
+                except NoSuchElementException as e:
+                    break
+                continue
+                time.sleep(0.1)
+            # Search
+            search_btn.click()
+            # Wait till result available
+            while True:
+                # Check for result
+                try:
+                    p = result_container.find_element_by_xpath('./p')
+                except NoSuchElementException as e:
+                    # Result not yet avaialable
+                    time.sleep(0.1)
+                    continue
+                result = p.get_attribute('innerText')
+                # Check result
+                if 'not available' in result:
+                    print('Not available')
+                else:
+                    print('available')
+                break
+            # Clear result box
+            zip_search_box.clear()
+            # Wait a little before next serach
+            time.sleep(1)
+        driver.quit()

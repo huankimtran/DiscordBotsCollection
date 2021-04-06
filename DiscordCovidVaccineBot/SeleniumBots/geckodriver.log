@@ -1,0 +1,12 @@
+1617703504439	geckodriver	INFO	Listening on 127.0.0.1:47951
+1617703504444	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "--marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile95j2U3"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1617703506654	Marionette	INFO	Listening on port 38889
+1617703506766	Marionette	WARN	TLS certificate errors will be ignored for this session
+1617703512089	Marionette	WARN	TimedPromise timed out after 500 ms: stacktrace:
+TimedPromise/<@chrome://marionette/content/sync.js:231:19
+TimedPromise@chrome://marionette/content/sync.js:216:10
+interaction.flushEventLoop@chrome://marionette/content/interaction.js:433:10
+webdriverClickElement@chrome://marionette/content/interaction.js:179:31
+JavaScript error: https://maps.googleapis.com/maps/api/js?client=gme-walgreens&libraries=places&channel=WAG_FC_IMMUNIZATION_VACCINE, line 88: Error: Could not load "util".
+1617703521630	Marionette	INFO	Stopped listening on port 38889
