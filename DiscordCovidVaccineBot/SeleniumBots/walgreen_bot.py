@@ -142,4 +142,5 @@ class WallGreenBot:
         for user in self.user_zipcode_map[z_code]:
             msg += f'<{user}> '
         # Announce
-        asyncio.run(self.channel.send(msg))
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.channel.send(msg))
