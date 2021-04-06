@@ -1,8 +1,9 @@
 import time
 import threading
 import random
+import asyncio
+import zipcodes as zp
 
-# import webdriver
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -11,10 +12,37 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class WallGreenBot:
-    def __init__(self) -> None:
+    def __init__(self, discord_channel) -> None:
+        self.channel = discord_channel
         self.page_url = f'https://www.walgreens.com/findcare/vaccination/covid-19?ban={random.randint(10000, 99999)}'
         self.user_zipcode_map = dict()
+        self.zipcode_status_map = dict()
         self.lock = threading.Lock()
+        self.driver = self.get_to_search_page()
+
+    def get_to_search_page(self):
+        # Spawn the browser
+        driver = webdriver.Firefox()
+        # Connect to landing page
+        driver.get(self.page_url)
+        # get button to start schedule
+        element = driver.find_element_by_xpath(
+            "//a[@href='/findcare/vaccination/covid-19/location-screening']")
+        # Bypass bot detector, not so effective though
+        time.sleep(random.randint(0, 5))
+        element.click()
+        # Wait until the transition finishes
+        WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element(
+            (By.XPATH, "//a[@title='state eligibility guidelines']"), 'state eligibility guidelines'))
+        # Now you got to the search page, find the zipcode search input
+        zip_search_box = driver.find_element_by_id('inputLocation')
+        # Find the search button
+        search_btn = zip_search_box.find_element_by_xpath('../button')
+        # Wait until the auto fill zipcode appears, clear then start checking
+        while len(zip_search_box.get_attribute('value')) == 0:
+            time.sleep(0.1)
+        zip_search_box.clear()
+        return driver
         
 
     def subscribe_user_to_zipcode(self, user_name, zipcode_list):
@@ -24,6 +52,16 @@ class WallGreenBot:
         """
         with self.lock:
             for zipcode in zipcode_list:
+                # Check if zipcode valid
+                try:
+                    match_list = zp.matching(str(zipcode))
+                except Exception:
+                    print(f'Invalid zipcode {zipcode}')
+                    continue
+                if len(match_list) == 0:
+                    print(f'Invalid zipcode {zipcode}')
+                    continue
+                # Process if valid
                 if zipcode not in self.user_zipcode_map:
                     self.user_zipcode_map[zipcode] = set()
                 # Add user to the subscriber set of this zipcode
@@ -39,25 +77,13 @@ class WallGreenBot:
                 if zipcode in self.user_zipcode_map:
                     try:
                         self.user_zipcode_map[zipcode].remove(user_name)
+                        if len(self.user_zipcode_map[zipcode]) == 0:
+                            del self.user_zipcode_map[zipcode]
                     except Exception as e:
                         continue
 
     def run(self):
-        # create webdriver object
-        driver = webdriver.Firefox()
-        # driver = webdriver.Chrome(options=options)
-        # driver = webdriver.Chrome()
-        # get to landig page
-        driver.get(self.page_url)
-        # get button to start schedule
-        element = driver.find_element_by_xpath(
-            "//a[@href='/findcare/vaccination/covid-19/location-screening']")
-        # Bypass bot detector
-        time.sleep(7)
-        element.click()
-        # Wait until the transition finishes
-        WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element(
-            (By.XPATH, "//a[@title='state eligibility guidelines']"), 'state eligibility guidelines'))
+        driver = self.driver
         # Now you got to the search page, find the zipcode search input
         zip_search_box = driver.find_element_by_id('inputLocation')
         # Find the search button
@@ -67,12 +93,11 @@ class WallGreenBot:
             '../../../../section[@class="mt25"]')
         # Now input the zipcode and search
         list_zip = list(self.user_zipcode_map.keys())
-        # Wait until the auto fill zipcode appears, clear then start checking
-        while len(zip_search_box.get_attribute('value')) == 0:
-            time.sleep(0.1)
         zip_search_box.clear()
         #  Start checking
         for z_code in list_zip:
+            if z_code not in self.zipcode_status_map:
+                self.zipcode_status_map[z_code] = False
             # Send in the zipcode
             zip_search_box.send_keys(str(z_code))
             # Make sure no result available
@@ -81,7 +106,6 @@ class WallGreenBot:
                     p = result_container.find_element_by_xpath('./p')
                 except NoSuchElementException as e:
                     break
-                continue
                 time.sleep(0.1)
             # Search
             search_btn.click()
@@ -97,12 +121,25 @@ class WallGreenBot:
                 result = p.get_attribute('innerText')
                 # Check result
                 if 'not available' in result:
-                    print('Not available')
+                    self.zipcode_status_map[z_code] = False
+                    print(f'Not available {z_code}')
                 else:
-                    print('available')
+                    if self.zipcode_status_map[z_code]:
+                        # Status of this zipcode has been flipped, announce
+                        self.announce(z_code)
+                    # Record the change
+                    self.zipcode_status_map[z_code] = True
+                    print(f'Available {z_code}')
                 break
             # Clear result box
             zip_search_box.clear()
             # Wait a little before next serach
             time.sleep(1)
-        driver.quit()
+    
+    def announce(self, z_code):
+        # Build message
+        msg = f'{z_code} is available\n'
+        for user in self.user_zipcode_map[z_code]:
+            msg += f'<{user}> '
+        # Announce
+        asyncio.run(self.channel.send(msg))

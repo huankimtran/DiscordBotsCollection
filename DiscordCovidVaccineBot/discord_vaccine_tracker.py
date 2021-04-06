@@ -16,6 +16,7 @@ from SeleniumBots.walgreen_bot import *
     {
         "DISCORD_VACCINE_TRACKER_BOT_API": "BOT_API_HERE",
         "DISCORD_SERVER_NAME": "SERVER_NAME_HERE, it should be Julius's Broadcaster"
+        "DISCORD_COVID_VACCINE_TRACKER_CHANNEL_ID": "The sequence when you type \#channel_name in the channel"
     }
 """
 
@@ -27,19 +28,24 @@ def load_config(config_file_name):
         print('Error openning discord config file!')
         return None
 
-def run_availability_checker_bot(list_of_bot):
+def run_availability_checker_bot(discord_bot):
+    #  Wait until the discord_bot ready
+    while not discord_bot.ready:
+        time.sleep(0.1)
+
     while True:
-        for bot in list_of_bot:
+        for bot in discord_bot.checker_bot_map.values():
             try:
                 bot.run()
             except Exception as e:
-                print('Error running bot')
+                print(f'Error running bot {e}')
             # Pause before next bot
             time.sleep(1)
             
 
 class DiscordVaccineTrackerBot:
     def __init__(self) -> None:
+        self.ready = False
         # Load discord config file
         self.ENV = load_config('discord_config.json')
         if self.ENV == None:
@@ -71,7 +77,16 @@ class DiscordVaccineTrackerBot:
         # =========================================DiscordBotDefinition=============================================
         @client.event
         async def on_ready():
+            # Get channel to post on
+            self.channel = client.get_channel(int(self.ENV['DISCORD_COVID_VACCINE_TRACKER_CHANNEL_ID']))
+            await self.channel.send('Bot ready!')
+            # Initialize the checker bot map
+            self.checker_bot_map = {
+                'walgreen' : WallGreenBot(self.channel)
+            }
+
             print(f'{client.user.name} has connected to Discord!')
+            self.ready = True
 
         @client.event
         async def on_message(message):
@@ -90,11 +105,8 @@ class DiscordVaccineTrackerBot:
                 await message.channel.send("Unsubscribed")
         # =========================================EndDiscordBotDefinition=============================================
 
-        # Create the availability checker bot to check for availability
-        self.wallgreen_bot = WallGreenBot()
-
         # Create thread to run availability checker bots
-        threading.Thread(target=run_availability_checker_bot, args=([self.wallgreen_bot], )).start()
+        threading.Thread(target=run_availability_checker_bot, args=(self, )).start()
 
     def run(self):
         self.bot.run(self.BOT_API)
@@ -148,7 +160,8 @@ class DiscordVaccineTrackerBot:
 
         # subscribe user to the zipcode
         try:
-            self.wallgreen_bot.subscribe_user_to_zipcode(user_name, zipcode_list)
+            for bot in self.checker_bot_map.values():
+                bot.subscribe_user_to_zipcode(user_name, zipcode_list)
         except Exception as e:
             print(f'Unable to subscribe user {user_name} to zipcode {zipcode_list} due to error {str(e)}')
             return False
@@ -204,7 +217,8 @@ class DiscordVaccineTrackerBot:
 
         # unsubscribe user from the zipcode
         try:
-            self.wallgreen_bot.unsubscribe_user_from_zipcode(user_name, zipcode_list)
+            for bot in self.checker_bot_map.values():
+                bot.unsubscribe_user_from_zipcode(user_name, zipcode_list)
         except Exception as e:
             print(f'Unable to unsubscribe user {user_name} from zipcode {zipcode_list} due to error {str(e)}')
             return False
