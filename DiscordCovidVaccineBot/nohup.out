@@ -1,0 +1,80 @@
+Ignoring exception in on_ready
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connection.py", line 139, in _new_conn
+    conn = connection.create_connection(
+  File "/usr/lib/python3/dist-packages/urllib3/util/connection.py", line 91, in create_connection
+    raise err
+  File "/usr/lib/python3/dist-packages/urllib3/util/connection.py", line 81, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 558, in urlopen
+    httplib_response = self._make_request(conn, method, url,
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 354, in _make_request
+    conn.request(method, url, **httplib_request_kw)
+  File "/usr/lib/python3.9/http/client.py", line 1253, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/usr/lib/python3.9/http/client.py", line 1299, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.9/http/client.py", line 1248, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/usr/lib/python3.9/http/client.py", line 1008, in _send_output
+    self.send(msg)
+  File "/usr/lib/python3.9/http/client.py", line 948, in send
+    self.connect()
+  File "/usr/lib/python3/dist-packages/urllib3/connection.py", line 165, in connect
+    conn = self._new_conn()
+  File "/usr/lib/python3/dist-packages/urllib3/connection.py", line 148, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x7fc3d81b31c0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/huankimtran/.local/lib/python3.9/site-packages/discord/client.py", line 343, in _run_event
+    await coro(*args, **kwargs)
+  File "/home/huankimtran/Desktop/Working/CovidVaccineTrackerBot/DiscordCovidVaccineBot/discord_vaccine_tracker.py", line 85, in on_ready
+    'walgreen' : WallGreenBot(self)
+  File "/home/huankimtran/Desktop/Working/CovidVaccineTrackerBot/DiscordCovidVaccineBot/SeleniumBots/walgreen_bot.py", line 21, in __init__
+    self.driver = self.get_to_search_page()
+  File "/home/huankimtran/Desktop/Working/CovidVaccineTrackerBot/DiscordCovidVaccineBot/SeleniumBots/walgreen_bot.py", line 30, in get_to_search_page
+    driver.get(self.page_url)
+  File "/home/huankimtran/.local/lib/python3.9/site-packages/selenium/webdriver/remote/webdriver.py", line 333, in get
+    self.execute(Command.GET, {'url': url})
+  File "/home/huankimtran/.local/lib/python3.9/site-packages/selenium/webdriver/remote/webdriver.py", line 319, in execute
+    response = self.command_executor.execute(driver_command, params)
+  File "/home/huankimtran/.local/lib/python3.9/site-packages/selenium/webdriver/remote/remote_connection.py", line 374, in execute
+    return self._request(command_info[0], url, body=data)
+  File "/home/huankimtran/.local/lib/python3.9/site-packages/selenium/webdriver/remote/remote_connection.py", line 397, in _request
+    resp = self._conn.request(method, url, body=body, headers=headers)
+  File "/usr/lib/python3/dist-packages/urllib3/request.py", line 71, in request
+    return self.request_encode_body(method, url, fields=fields,
+  File "/usr/lib/python3/dist-packages/urllib3/request.py", line 151, in request_encode_body
+    return self.urlopen(method, url, **extra_kw)
+  File "/usr/lib/python3/dist-packages/urllib3/poolmanager.py", line 163, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 627, in urlopen
+    return self.urlopen(method, url, body, headers, retries,
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 627, in urlopen
+    return self.urlopen(method, url, body, headers, retries,
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 627, in urlopen
+    return self.urlopen(method, url, body, headers, retries,
+  File "/usr/lib/python3/dist-packages/urllib3/connectionpool.py", line 609, in urlopen
+    retries = retries.increment(method, url, error=e, _pool=self,
+  File "/usr/lib/python3/dist-packages/urllib3/util/retry.py", line 283, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=56463): Max retries exceeded with url: /session/7d641226-74be-451f-adaf-009b22b138a2/url (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7fc3d81b31c0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+Exception ignored in: <module 'threading' from '/usr/lib/python3.9/threading.py'>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/threading.py", line 1428, in _shutdown
+    lock.acquire()
+KeyboardInterrupt: 
+Exception ignored in: <module 'threading' from '/usr/lib/python3.9/threading.py'>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/threading.py", line 1428, in _shutdown
+    lock.acquire()
+KeyboardInterrupt: 
+VaccineTracker has connected to Discord!
