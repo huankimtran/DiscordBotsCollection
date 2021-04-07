@@ -19,6 +19,9 @@ class WallGreenBot:
         self.zipcode_status_map = dict()
         self.lock = threading.Lock()
         self.driver = self.get_to_search_page()
+    
+    def __del__(self):
+        self.driver.quit()
 
     def get_to_search_page(self):
         # Run headless

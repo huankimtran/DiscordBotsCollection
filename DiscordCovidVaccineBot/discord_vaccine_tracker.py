@@ -20,6 +20,9 @@ from SeleniumBots.walgreen_bot import *
     }
 """
 
+CHECKER_BOT_SESSION_LIFESPAN = 1800    # Duration for each selenium session, in seconds
+discord_bot = None
+
 def load_config(config_file_name):
     try:
         with open(config_file_name) as f:
@@ -32,16 +35,21 @@ def run_availability_checker_bot(discord_bot):
     #  Wait until the discord_bot ready
     while not discord_bot.ready:
         time.sleep(0.1)
-
+    # Ready so run but
     while True:
-        for bot in discord_bot.checker_bot_map.values():
-            try:
-                bot.run()
-            except Exception as e:
-                print(f'Error running bot {e}')
-            # Pause before next bot
-            time.sleep(1)
-            
+        session_begin = time.time()
+        while time.time() - session_begin <= CHECKER_BOT_SESSION_LIFESPAN:
+            for bot in discord_bot.checker_bot_map.values():
+                try:
+                    bot.run()
+                except Exception as e:
+                    print(f'Error running bot {e}')
+                # Pause before next bot
+                time.sleep(1)
+        # Done session so delete the bot and run a new session for each bot
+        for bot_name in discord_bot.checker_bot_map:
+            # Remove and respawn a new bot
+            discord_bot.checker_bot_map[bot_name] = WallGreenBot(discord_bot)
 
 class DiscordVaccineTrackerBot:
     def __init__(self) -> None:
@@ -227,4 +235,6 @@ class DiscordVaccineTrackerBot:
             return False
         return True
 
-DiscordVaccineTrackerBot().run()
+# =================================================
+discord_bot = DiscordVaccineTrackerBot()
+discord_bot.run()
