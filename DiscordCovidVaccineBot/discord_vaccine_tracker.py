@@ -37,19 +37,19 @@ def run_availability_checker_bot(discord_bot):
         time.sleep(0.1)
     # Ready so run but
     while True:
-        session_begin = time.time()
-        while time.time() - session_begin <= CHECKER_BOT_SESSION_LIFESPAN:
-            for bot in discord_bot.checker_bot_map.values():
-                try:
-                    bot.run()
-                except Exception as e:
-                    print(f'Error running bot {e}')
-                # Pause before next bot
-                time.sleep(1)
-        # Done session so delete the bot and run a new session for each bot
-        for bot_name in discord_bot.checker_bot_map:
-            # Remove and respawn a new bot
-            discord_bot.checker_bot_map[bot_name] = WallGreenBot(discord_bot)
+        # session_begin = time.time()
+        # while time.time() - session_begin <= CHECKER_BOT_SESSION_LIFESPAN:
+        for bot in discord_bot.checker_bot_map.values():
+            try:
+                bot.run()
+            except Exception as e:
+                print(f'Error running bot {e}')
+            # Pause before next bot
+            time.sleep(1)
+        # # Done session so delete the bot and run a new session for each bot
+        # for bot_name in discord_bot.checker_bot_map:
+        #     # Remove and respawn a new bot
+        #     discord_bot.checker_bot_map[bot_name] = WallGreenBot(discord_bot)
 
 class DiscordVaccineTrackerBot:
     def __init__(self) -> None:
