@@ -2,3 +2,4 @@ discord_config.json
 __pycache__/
 geckodriver.log
 nohup.out
+walgreen_bot_user_zip_map.log
