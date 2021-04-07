@@ -1,5 +1,5 @@
 {
     "DISCORD_VACCINE_TRACKER_BOT_API": "BOT_API_HERE",
     "DISCORD_SERVER_NAME": "Server name here",
-    "DISCORD_BOT_OPERATING_CHANNEL": "The sequence when you type \\#channel_name in the channel"
+    "DISCORD_BOT_OPERATING_CHANNEL": The sequence when you type \\#channel_name in the channel, do not put in quote because this will be a number, type int
 }
