@@ -12,15 +12,12 @@ from SeleniumBots.walgreen_bot import *
 """
     Requirement:
     There needs to be a discord_config.json file in this folder.
-    The JSON file contains the structure below. User needs to fill in the field
-    {
-        "DISCORD_VACCINE_TRACKER_BOT_API": "BOT_API_HERE",
-        "DISCORD_SERVER_NAME": "SERVER_NAME_HERE, it should be Julius's Broadcaster"
-        "DISCORD_COVID_VACCINE_TRACKER_CHANNEL_ID": "The sequence when you type \#channel_name in the channel"
-    }
+    The JSON file having the structure like the discord_config_template.json file
+
+    TODO : Move the user zipcode map to the discord bot, so that when you restart the Checker bot, it won't lose the user subscription data
+    TODO : Make the bot print the syntax of subscribe command when a new user join the server
 """
 
-CHECKER_BOT_SESSION_LIFESPAN = 1800    # Duration for each selenium session, in seconds
 discord_bot = None
 
 def load_config(config_file_name):
@@ -35,21 +32,15 @@ def run_availability_checker_bot(discord_bot):
     #  Wait until the discord_bot ready
     while not discord_bot.ready:
         time.sleep(0.1)
-    # Ready so run but
+    # Ready so run bot
     while True:
-        # session_begin = time.time()
-        # while time.time() - session_begin <= CHECKER_BOT_SESSION_LIFESPAN:
         for bot in discord_bot.checker_bot_map.values():
             try:
                 bot.run()
             except Exception as e:
                 print(f'Error running bot {e}')
             # Pause before next bot
-            time.sleep(1)
-        # # Done session so delete the bot and run a new session for each bot
-        # for bot_name in discord_bot.checker_bot_map:
-        #     # Remove and respawn a new bot
-        #     discord_bot.checker_bot_map[bot_name] = WallGreenBot(discord_bot)
+            time.sleep(0.1)
 
 class DiscordVaccineTrackerBot:
     def __init__(self) -> None:
@@ -80,13 +71,15 @@ class DiscordVaccineTrackerBot:
                 Or using range, from 75513 to 75515
 
                 /unsubscribe_zip 75513-75515"""
-        # Generate the discord bot
-        self.bot = client = discord.Client()
+        # Generate the discord 
+        intents = discord.Intents.default()
+        intents.members = True
+        self.bot = client = discord.Client(intents=intents)
         # =========================================DiscordBotDefinition=============================================
         @client.event
         async def on_ready():
             # Get channel to post on
-            self.channel = client.get_channel(int(self.ENV['DISCORD_COVID_VACCINE_TRACKER_CHANNEL_ID']))
+            self.channel = client.get_channel(self.ENV['DISCORD_BOT_OPERATING_CHANNEL'])
             await self.channel.send('Bot ready!')
             # Initialize the checker bot map
             self.checker_bot_map = {
@@ -95,15 +88,31 @@ class DiscordVaccineTrackerBot:
 
             print(f'{client.user.name} has connected to Discord!')
             self.ready = True
+        
+        @client.event
+        async def on_member_join(member):
+            # Don't respond to bot
+            if member.bot:
+                return
+            # Send welcome and instructions 
+            while not self.ready:
+                pass
+            # Build message
+            try:
+                msg = f'Welcome {member.mention}!\nSubscribe to your zipcode and get notified when Covid vaccine is available at the closest WallGreen\nMake sure you create an account at WallGreen site so that when the notification comes, you can just login, and confirm your scheduled appointment!\nThe channel might get very noisy, so I recommend you to set your notificaiton setting to @only-mention for this channel\n============Subscribe==========\n{self.SUBSCRIBE_CMD_PROMPT}\n=============Unsubscribe==============\n{self.UNSUBSCRIBE_CMD_PROMPT}'
+                # Send message
+                await self.channel.send(msg)
+            except Exception as e:
+                print(e)
 
         @client.event
         async def on_message(message):
-            # Preventing bot from responding to itself
-            if message.author == client.user:
+            # Preventing bot from responding to itself or other bot
+            if message.author.bot:
                 return
             
-            # Only responds to channel covid-vaccine-tracker
-            if str(message.channel) != 'covid-vaccine-tracker':
+            # Only responds to one specified channel
+            if message.channel.id != self.ENV['DISCORD_BOT_OPERATING_CHANNEL']:
                 return
             
             # Track user command
@@ -234,6 +243,7 @@ class DiscordVaccineTrackerBot:
             print(f'Unable to unsubscribe user {user_name} from zipcode {zipcode_list} due to error {str(e)}')
             return False
         return True
+
 
 # =================================================
 discord_bot = DiscordVaccineTrackerBot()
