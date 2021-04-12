@@ -14,8 +14,9 @@ from selenium.webdriver.support import expected_conditions as EC
 class WallGreenBot:
     def __init__(self, discord_client) -> None:
         # Predifined value
-        self.session_duration = 900             # Duration of one session, after this, new session will be spawn, currently set at 15 mins
-        self.delay_between_session = 10         # Delay between session
+        self.session_duration = 21600               # Duration of one session, after this, new session will be spawn, currently set at 6 hours
+        self.session_retry = 1800                   # Wait 30mins before retry connecting
+        self.delay_between_session = 10             # Delay between session
         # Init
         self.discord_client = discord_client
         self.page_url = f'https://www.walgreens.com/findcare/vaccination/covid-19?ban={random.randint(10000, 99999)}'
@@ -78,7 +79,7 @@ class WallGreenBot:
                 except Exception as e:
                     pass
                 # Wait a while before retry
-                time.sleep(self.session_duration)
+                time.sleep(self.session_retry)
                 print('retrying...')
                 continue
             break
